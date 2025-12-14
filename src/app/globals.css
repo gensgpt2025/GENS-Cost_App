@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans:
+    var(--font-geist-sans),
+    ui-sans-serif,
+    system-ui,
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    "Noto Color Emoji";
+
+  --font-mono:
+    var(--font-geist-mono),
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #09090b; /* Very dark zinc */
+  --foreground: #fafafa;
+  --card: #18181b; /* Zinc 900 */
+  --card-foreground: #fafafa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+  --primary: #FFD700; /* Gold */
+  --primary-foreground: #18181b;
+  --secondary: #27272a; /* Zinc 800 */
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #FFD700;
+  --chart-1: #FFD700;
+  --chart-2: #38bdf8; /* Sky blue for contrast */
+  --chart-3: #4ade80; /* Green */
+  --chart-4: #f472b6; /* Pink */
+  --chart-5: #a78bfa; /* Violet */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Custom Glassmorphism Utilities */
+@utility glass {
+  background: rgba(24, 24, 27, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 215, 0, 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@utility glass-card {
+  background: linear-gradient(145deg, rgba(24, 24, 27, 0.9) 0%, rgba(9, 9, 11, 0.9) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+}
+
+@utility text-glow {
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
