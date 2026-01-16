@@ -18,7 +18,7 @@ export default function Home() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold text-primary text-glow">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-primary text-glow">GENS会計 Dashboard</h1>
           <p className="text-muted-foreground">チームの財政状況を一目で確認できます</p>
         </div>
         <div className="flex gap-2">

@@ -22,13 +22,14 @@ const navItems = [
         icon: Users,
     },
     {
-        href: "/settings",
-        icon: Settings,
-    },
-    {
         name: "集金管理",
         href: "/collections",
         icon: Receipt, // Re-using receipt for now, or could import another icon
+    },
+    {
+        name: "設定",
+        href: "/settings",
+        icon: Settings,
     },
 ]
 
@@ -60,7 +61,7 @@ export function Navbar() {
 
             {/* Mobile Bottom Navigation */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border bg-background/80 backdrop-blur-xl">
-                <nav className="grid h-full grid-cols-4">
+                <nav className="grid h-full grid-cols-5">
                     {navItems.map((item) => {
                         const Icon = item.icon
                         const isActive = pathname === item.href
