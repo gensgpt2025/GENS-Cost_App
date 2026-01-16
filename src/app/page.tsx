@@ -89,7 +89,14 @@ export default function Home() {
               {recentTransactions.map((t) => (
                 <div key={t.id} className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
                   <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none text-white">{t.description}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium leading-none text-white">{t.description}</p>
+                      {t.memberId && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+                          {members.find(m => m.id === t.memberId)?.name}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">{t.date} • {t.category}</p>
                   </div>
                   <div className={`font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}>

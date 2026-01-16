@@ -15,6 +15,7 @@ export interface Transaction {
     type: TransactionType;
     category: string;
     memberId?: string; // Optional link to member (e.g. who paid)
+    targetDate?: string; // Optional: Which month this payment is for (YYYY-MM-DD, usually first of month)
 }
 
 export interface AppState {

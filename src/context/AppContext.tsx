@@ -88,7 +88,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             t.category,
             `"${t.description}"`, // Quote description to handle commas
             t.amount,
-            t.memberId || ''
+            t.memberId ? (data.members.find(m => m.id === t.memberId)?.name || t.memberId) : ''
         ]);
 
         const csvContent = [

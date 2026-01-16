@@ -22,9 +22,13 @@ const navItems = [
         icon: Users,
     },
     {
-        name: "設定",
         href: "/settings",
         icon: Settings,
+    },
+    {
+        name: "集金管理",
+        href: "/collections",
+        icon: Receipt, // Re-using receipt for now, or could import another icon
     },
 ]
 

@@ -3,11 +3,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/context/AppContext"
-import { Trash2, Plus } from "lucide-react"
+import { Trash2, Plus, Wallet } from "lucide-react"
 import Link from "next/link"
 
 export default function TransactionsPage() {
-    const { transactions, deleteTransaction } = useApp()
+    const { transactions, deleteTransaction, summary, members } = useApp()
 
     // Sort by date desc
     const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -26,6 +26,16 @@ export default function TransactionsPage() {
                     </Button>
                 </Link>
             </div>
+
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">現在残高</CardTitle>
+                    <Wallet className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-primary text-glow">¥{summary.balance.toLocaleString()}</div>
+                </CardContent>
+            </Card>
 
             <Card className="glass-card">
                 <CardContent className="p-0">
@@ -51,13 +61,22 @@ export default function TransactionsPage() {
                                             <td className="p-4 align-middle">{t.date}</td>
                                             <td className="p-4 align-middle">
                                                 <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${t.type === 'income'
-                                                        ? 'border-transparent bg-emerald-500/10 text-emerald-500'
-                                                        : 'border-transparent bg-rose-500/10 text-rose-500'
+                                                    ? 'border-transparent bg-emerald-500/10 text-emerald-500'
+                                                    : 'border-transparent bg-rose-500/10 text-rose-500'
                                                     }`}>
                                                     {t.category}
                                                 </span>
                                             </td>
-                                            <td className="p-4 align-middle">{t.description}</td>
+                                            <td className="p-4 align-middle">
+                                                <div className="flex flex-col">
+                                                    <span>{t.description}</span>
+                                                    {t.memberId && (
+                                                        <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full w-fit mt-1">
+                                                            {members.find(m => m.id === t.memberId)?.name}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className={`p-4 align-middle text-right font-medium ${t.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}>
                                                 {t.type === 'income' ? '+' : '-'}¥{t.amount.toLocaleString()}
                                             </td>
