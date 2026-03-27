@@ -114,6 +114,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     const backupData = () => {
+        alert("バックアップファイルのダウンロードを開始します！\n\n※お使いの端末の「ダウンロード」フォルダ等に保存されます。");
         const backupContent = JSON.stringify(data, null, 2);
         const blob = new Blob([backupContent], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
