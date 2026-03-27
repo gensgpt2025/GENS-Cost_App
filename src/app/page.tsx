@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpRight, ArrowDownRight, Users, Wallet, Download } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import Link from "next/link";
+import BackupRestore from "@/components/BackupRestore";
 
 export default function Home() {
   const { summary, members, transactions, exportData } = useApp();
@@ -21,7 +22,8 @@ export default function Home() {
           <h1 className="text-3xl font-bold text-[#FFD700] text-glow">GENS会計 Dashboard</h1>
           <p className="text-muted-foreground">チームの財政状況を一目で確認できます</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <BackupRestore />
           <Button variant="outline" onClick={exportData}>
             <Download className="mr-2 h-4 w-4" />
             CSV出力

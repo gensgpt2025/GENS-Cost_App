@@ -10,6 +10,8 @@ interface AppContextType extends AppState {
     addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
     deleteTransaction: (id: string) => void;
     exportData: () => void;
+    backupData: () => void;
+    restoreData: (dataStr: string) => void;
     summary: {
         balance: number;
         income: number;
@@ -111,6 +113,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         document.body.removeChild(link);
     };
 
+    const backupData = () => {
+        const backupContent = JSON.stringify(data, null, 2);
+        const blob = new Blob([backupContent], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `gens_cost_backup_full_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const restoreData = (dataStr: string) => {
+        try {
+            const parsed = JSON.parse(dataStr) as AppState;
+            if (parsed.members && parsed.transactions) {
+                setData(parsed);
+                alert('✅ データの完全復元に成功しました！');
+            } else {
+                throw new Error("Invalid format");
+            }
+        } catch (e) {
+            console.error(e);
+            alert('❌ バックアップファイルの読み込みに失敗しました。ファイルが違うか壊れています。');
+        }
+    };
+
     return (
         <AppContext.Provider value={{
             ...data,
@@ -119,6 +148,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             addTransaction,
             deleteTransaction,
             exportData,
+            backupData,
+            restoreData,
             summary
         }}>
             {children}
