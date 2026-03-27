@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Member, Transaction, AppState } from '@/types';
+import { getAppData, saveAppData } from '@/app/actions/kv';
 
 interface AppContextType extends AppState {
     addMember: (member: Omit<Member, 'id' | 'joinedAt'>) => void;
@@ -27,23 +28,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // Load from local storage
+    // Load from Vercel KV
     useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
+        const loadData = async () => {
             try {
-                setData(JSON.parse(saved));
+                const savedData = await getAppData();
+                if (savedData) {
+                    setData(savedData);
+                }
             } catch (e) {
-                console.error("Failed to parse local storage data", e);
+                console.error("Failed to load data from KV", e);
+            } finally {
+                setIsLoaded(true);
             }
-        }
-        setIsLoaded(true);
+        };
+        loadData();
     }, []);
 
-    // Save to local storage
+    // Save to Vercel KV
     useEffect(() => {
         if (isLoaded) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            saveAppData(data).catch(e => console.error("Failed to save data to KV", e));
         }
     }, [data, isLoaded]);
 
