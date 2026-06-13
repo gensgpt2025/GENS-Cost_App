@@ -155,6 +155,20 @@ export default function NewTransactionPage() {
                         </div>
 
                         <div className="space-y-2">
+                            <Label htmlFor="category">カテゴリ</Label>
+                            <select
+                                id="category"
+                                className="flex h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                value={formData.category}
+                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                            >
+                                {categories.map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
                             <Label htmlFor="date">日付</Label>
                             <div className="flex gap-2">
                                 <Input
@@ -253,20 +267,6 @@ export default function NewTransactionPage() {
                                 </div>
                             </>
                         )}
-
-                        <div className="space-y-2">
-                            <Label htmlFor="category">カテゴリ</Label>
-                            <select
-                                id="category"
-                                className="flex h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                value={formData.category}
-                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                            >
-                                {categories.map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
-                        </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="description">詳細/メモ</Label>
