@@ -1,10 +1,12 @@
 export type TransactionType = 'income' | 'expense';
+export type FeeTier = 'under22' | 'adult';
 
 export interface Member {
     id: string;
     name: string;
     role: 'member' | 'guest' | 'manager';
     joinedAt: string;
+    feeTier: FeeTier;
 }
 
 export interface Transaction {
@@ -18,7 +20,15 @@ export interface Transaction {
     targetDate?: string; // Optional: Which month this payment is for (YYYY-MM-DD, usually first of month)
 }
 
+export interface AppSettings {
+    monthlyFees: {
+        under22: number;
+        adult: number;
+    };
+}
+
 export interface AppState {
     members: Member[];
     transactions: Transaction[];
+    settings: AppSettings;
 }

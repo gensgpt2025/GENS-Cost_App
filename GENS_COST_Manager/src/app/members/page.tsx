@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/context/AppContext"
 import { UserPlus, Trash2, User } from "lucide-react"
+import { FeeTier } from "@/types"
 
 export default function MembersPage() {
-    const { members, addMember, deleteMember } = useApp()
+    const { members, addMember, deleteMember, updateMemberFeeTier } = useApp()
     const [newName, setNewName] = useState("")
+    const [newFeeTier, setNewFeeTier] = useState<FeeTier>("adult")
 
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault()
@@ -17,9 +19,11 @@ export default function MembersPage() {
 
         addMember({
             name: newName,
-            role: 'member'
+            role: 'member',
+            feeTier: newFeeTier
         })
         setNewName("")
+        setNewFeeTier("adult")
     }
 
     return (
@@ -34,13 +38,20 @@ export default function MembersPage() {
                     <CardTitle>新規メンバー登録</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleAdd} className="flex gap-4">
+                    <form onSubmit={handleAdd} className="grid gap-4 md:grid-cols-[1fr_180px_auto]">
                         <Input
                             placeholder="メンバー名 (例: 山田 太郎)"
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
-                            className="max-w-md"
                         />
+                        <select
+                            className="flex h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            value={newFeeTier}
+                            onChange={(e) => setNewFeeTier(e.target.value as FeeTier)}
+                        >
+                            <option value="adult">23歳以上</option>
+                            <option value="under22">22歳以下</option>
+                        </select>
                         <Button type="submit">
                             <UserPlus className="mr-2 h-4 w-4" />
                             追加
@@ -57,7 +68,7 @@ export default function MembersPage() {
                 ) : (
                     members.map((member) => (
                         <Card key={member.id} className="relative overflow-hidden transition-all hover:bg-accent/5">
-                            <CardContent className="flex items-center justify-between p-6">
+                            <CardContent className="space-y-4 p-6">
                                 <div className="flex items-center gap-4">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                                         <User className="h-5 w-5" />
@@ -67,9 +78,19 @@ export default function MembersPage() {
                                         <p className="text-xs text-muted-foreground">Joined: {new Date(member.joinedAt).toLocaleDateString()}</p>
                                     </div>
                                 </div>
-                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => deleteMember(member.id)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <div className="flex items-center justify-between gap-3">
+                                    <select
+                                        className="flex h-9 flex-1 rounded-md border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                        value={member.feeTier}
+                                        onChange={(e) => updateMemberFeeTier(member.id, e.target.value as FeeTier)}
+                                    >
+                                        <option value="adult">23歳以上</option>
+                                        <option value="under22">22歳以下</option>
+                                    </select>
+                                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => deleteMember(member.id)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </CardContent>
                         </Card>
                     ))

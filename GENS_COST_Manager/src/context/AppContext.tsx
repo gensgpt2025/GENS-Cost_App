@@ -1,14 +1,16 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Member, Transaction, AppState } from '@/types';
+import { FeeTier, Member, Transaction, AppState, AppSettings } from '@/types';
 import { getAppData, saveAppData } from '@/app/actions/kv';
 
 interface AppContextType extends AppState {
     addMember: (member: Omit<Member, 'id' | 'joinedAt'>) => void;
     deleteMember: (id: string) => void;
+    updateMemberFeeTier: (id: string, feeTier: FeeTier) => void;
     addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
     deleteTransaction: (id: string) => void;
+    updateSettings: (settings: AppSettings) => void;
     exportData: () => void;
     backupData: () => void;
     restoreData: (dataStr: string) => void;
@@ -21,11 +23,51 @@ interface AppContextType extends AppState {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const DEFAULT_SETTINGS: AppSettings = {
+    monthlyFees: {
+        under22: 2000,
+        adult: 3000,
+    },
+};
+
+const createInitialState = (): AppState => ({
+    members: [],
+    transactions: [],
+    settings: DEFAULT_SETTINGS,
+});
+
+const under22MemberNames = ['とわ', '龍司', 'こーしゅん'];
+const under22MemberNumbers = ['10', '33', '77'];
+
+const inferFeeTier = (member: Partial<Member>): FeeTier => {
+    if (member.feeTier) {
+        return member.feeTier;
+    }
+
+    const name = member.name ?? '';
+    const normalizedName = name.replace(/\s+/g, '');
+    const hasUnder22Name = under22MemberNames.some(under22Name => normalizedName.includes(under22Name));
+    const hasUnder22Number = under22MemberNumbers.some(number => name.trim().startsWith(`${number} `));
+
+    return hasUnder22Name || hasUnder22Number ? 'under22' : 'adult';
+};
+
+const normalizeAppState = (state: Partial<AppState>): AppState => ({
+    members: (state.members ?? []).map(member => ({
+        ...member,
+        feeTier: inferFeeTier(member),
+    })),
+    transactions: state.transactions ?? [],
+    settings: {
+        monthlyFees: {
+            under22: state.settings?.monthlyFees?.under22 ?? DEFAULT_SETTINGS.monthlyFees.under22,
+            adult: state.settings?.monthlyFees?.adult ?? DEFAULT_SETTINGS.monthlyFees.adult,
+        },
+    },
+});
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
-    const [data, setData] = useState<AppState>({
-        members: [],
-        transactions: []
-    });
+    const [data, setData] = useState<AppState>(createInitialState());
     const [isLoaded, setIsLoaded] = useState(false);
 
     // Load from Vercel KV
@@ -34,7 +76,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             try {
                 const savedData = await getAppData();
                 if (savedData) {
-                    setData(savedData);
+                    setData(normalizeAppState(savedData));
                 }
             } catch (e) {
                 console.error("Failed to load data from KV", e);
@@ -65,6 +107,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setData(prev => ({ ...prev, members: prev.members.filter(m => m.id !== id) }));
     };
 
+    const updateMemberFeeTier = (id: string, feeTier: FeeTier) => {
+        setData(prev => ({
+            ...prev,
+            members: prev.members.map(member => (
+                member.id === id ? { ...member, feeTier } : member
+            )),
+        }));
+    };
+
     const addTransaction = (transactionData: Omit<Transaction, 'id'>) => {
         const newTransaction: Transaction = {
             ...transactionData,
@@ -75,6 +126,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const deleteTransaction = (id: string) => {
         setData(prev => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
+    };
+
+    const updateSettings = (settings: AppSettings) => {
+        setData(prev => ({ ...prev, settings }));
     };
 
     // Derived state
@@ -128,7 +183,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         try {
             const parsed = JSON.parse(dataStr) as AppState;
             if (parsed.members && parsed.transactions) {
-                setData(parsed);
+                setData(normalizeAppState(parsed));
                 alert('✅ データの完全復元に成功しました！');
             } else {
                 throw new Error("Invalid format");
@@ -144,8 +199,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             ...data,
             addMember,
             deleteMember,
+            updateMemberFeeTier,
             addTransaction,
             deleteTransaction,
+            updateSettings,
             exportData,
             backupData,
             restoreData,
