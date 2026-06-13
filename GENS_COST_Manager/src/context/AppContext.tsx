@@ -21,8 +21,6 @@ interface AppContextType extends AppState {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'gens-cost-data';
-
 export function AppProvider({ children }: { children: React.ReactNode }) {
     const [data, setData] = useState<AppState>({
         members: [],
