@@ -12,7 +12,7 @@ import Link from "next/link"
 
 export default function NewTransactionPage() {
     const router = useRouter()
-    const { addTransaction, members } = useApp()
+    const { addTransaction, members, transactions } = useApp()
     const [loading, setLoading] = useState(false)
     const dateInputRef = useRef<HTMLInputElement>(null)
     const targetDateInputRef = useRef<HTMLInputElement>(null)
@@ -41,6 +41,25 @@ export default function NewTransactionPage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+
+        const isClubFee = formData.type === 'income' && formData.category === '部費'
+        const duplicateClubFee = isClubFee && formData.memberId && transactions.some(t => {
+            const dateToCheck = t.targetDate || t.date
+
+            return (
+                t.type === 'income' &&
+                t.category === '部費' &&
+                t.memberId === formData.memberId &&
+                dateToCheck.startsWith(formData.targetDate)
+            )
+        })
+
+        if (duplicateClubFee) {
+            const memberName = members.find(m => m.id === formData.memberId)?.name || '選択したメンバー'
+            alert(`${memberName}さんの${formData.targetDate}分の部費は、すでに登録されています。`)
+            return
+        }
+
         setLoading(true)
 
         // Simulate small delay
