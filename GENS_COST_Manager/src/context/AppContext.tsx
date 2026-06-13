@@ -9,6 +9,7 @@ interface AppContextType extends AppState {
     deleteMember: (id: string) => void;
     updateMemberFeeTier: (id: string, feeTier: FeeTier) => void;
     addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
+    updateTransaction: (id: string, transaction: Omit<Transaction, 'id'>) => void;
     deleteTransaction: (id: string) => void;
     updateSettings: (settings: AppSettings) => void;
     exportData: () => void;
@@ -124,6 +125,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setData(prev => ({ ...prev, transactions: [newTransaction, ...prev.transactions] }));
     };
 
+    const updateTransaction = (id: string, transactionData: Omit<Transaction, 'id'>) => {
+        setData(prev => ({
+            ...prev,
+            transactions: prev.transactions.map(transaction => (
+                transaction.id === id ? { ...transactionData, id } : transaction
+            )),
+        }));
+    };
+
     const deleteTransaction = (id: string) => {
         setData(prev => ({ ...prev, transactions: prev.transactions.filter(t => t.id !== id) }));
     };
@@ -201,6 +211,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             deleteMember,
             updateMemberFeeTier,
             addTransaction,
+            updateTransaction,
             deleteTransaction,
             updateSettings,
             exportData,

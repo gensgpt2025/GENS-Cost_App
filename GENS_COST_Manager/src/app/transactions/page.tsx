@@ -3,11 +3,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/context/AppContext"
-import { Trash2, Plus, Wallet } from "lucide-react"
+import { Pencil, Trash2, Plus, Wallet } from "lucide-react"
 import Link from "next/link"
 
 export default function TransactionsPage() {
     const { transactions, deleteTransaction, summary, members } = useApp()
+
+    const handleDelete = (id: string) => {
+        const confirmed = window.confirm("この取引を削除しますか？\n\n削除すると、集金管理の支払い済み表示にも反映されます。")
+        if (confirmed) {
+            deleteTransaction(id)
+        }
+    }
 
     // Sort by date desc
     const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -81,9 +88,16 @@ export default function TransactionsPage() {
                                                 {t.type === 'income' ? '+' : '-'}¥{t.amount.toLocaleString()}
                                             </td>
                                             <td className="p-4 align-middle text-right">
-                                                <Button variant="ghost" size="icon" onClick={() => deleteTransaction(t.id)} className="hover:text-destructive">
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                <div className="flex justify-end gap-1">
+                                                    <Link href={`/transactions/${t.id}/edit`}>
+                                                        <Button variant="ghost" size="icon" className="hover:text-primary" title="編集">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                    </Link>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)} className="hover:text-destructive" title="削除">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
