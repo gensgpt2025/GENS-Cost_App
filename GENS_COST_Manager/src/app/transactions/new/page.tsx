@@ -24,6 +24,7 @@ export default function NewTransactionPage() {
         description: '',
         memberId: '',
         targetDate: new Date().toISOString().slice(0, 7), // YYYY-MM
+        monthCount: '1',
         // Use local date for default
         date: (() => {
             const d = new Date();
@@ -39,10 +40,29 @@ export default function NewTransactionPage() {
         ? ['部費', '参加費', 'その他収入']
         : ['コート代', '備品代', '大会参加費', 'その他経費'];
 
+    const isClubFee = formData.type === 'income' && formData.category === '部費'
+    const monthCount = isClubFee ? Math.max(1, Number(formData.monthCount) || 1) : 1
+    const monthlyAmount = Number(formData.amount) || 0
+    const totalAmount = monthlyAmount * monthCount
+
+    const addMonths = (yearMonth: string, monthsToAdd: number) => {
+        const [year, month] = yearMonth.split('-').map(Number)
+        const date = new Date(year, month - 1 + monthsToAdd, 1)
+        const nextYear = date.getFullYear()
+        const nextMonth = String(date.getMonth() + 1).padStart(2, '0')
+        return `${nextYear}-${nextMonth}`
+    }
+
+    const formatMonthLabel = (yearMonth: string) => {
+        const [year, month] = yearMonth.split('-').map(Number)
+        return `${year}年${month}月分`
+    }
+
+    const targetMonths = Array.from({ length: monthCount }, (_, index) => addMonths(formData.targetDate, index))
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
 
-        const isClubFee = formData.type === 'income' && formData.category === '部費'
         const duplicateClubFee = isClubFee && formData.memberId && transactions.some(t => {
             const dateToCheck = t.targetDate || t.date
 
@@ -50,13 +70,13 @@ export default function NewTransactionPage() {
                 t.type === 'income' &&
                 t.category === '部費' &&
                 t.memberId === formData.memberId &&
-                dateToCheck.startsWith(formData.targetDate)
+                targetMonths.some(targetMonth => dateToCheck.startsWith(targetMonth))
             )
         })
 
         if (duplicateClubFee) {
             const memberName = members.find(m => m.id === formData.memberId)?.name || '選択したメンバー'
-            alert(`${memberName}さんの${formData.targetDate}分の部費は、すでに登録されています。`)
+            alert(`${memberName}さんの対象月に、すでに登録済みの部費があります。`)
             return
         }
 
@@ -64,15 +84,30 @@ export default function NewTransactionPage() {
 
         // Simulate small delay
         setTimeout(() => {
-            addTransaction({
-                amount: Number(formData.amount),
-                type: formData.type as 'income' | 'expense',
-                category: formData.category,
-                description: formData.description,
-                memberId: formData.memberId || undefined,
-                targetDate: formData.category === '部費' ? `${formData.targetDate}-01` : undefined, // Save as YYYY-MM-01
-                date: formData.date
-            })
+            if (isClubFee) {
+                targetMonths.forEach(targetMonth => {
+                    const monthLabel = formatMonthLabel(targetMonth)
+
+                    addTransaction({
+                        amount: monthlyAmount,
+                        type: 'income',
+                        category: '部費',
+                        description: formData.description ? `${formData.description} (${monthLabel})` : monthLabel,
+                        memberId: formData.memberId || undefined,
+                        targetDate: `${targetMonth}-01`,
+                        date: formData.date
+                    })
+                })
+            } else {
+                addTransaction({
+                    amount: Number(formData.amount),
+                    type: formData.type as 'income' | 'expense',
+                    category: formData.category,
+                    description: formData.description,
+                    memberId: formData.memberId || undefined,
+                    date: formData.date
+                })
+            }
             router.push('/')
             router.refresh()
         }, 500)
@@ -142,7 +177,7 @@ export default function NewTransactionPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="amount">金額 (¥)</Label>
+                            <Label htmlFor="amount">{isClubFee ? '月額 (¥)' : '金額 (¥)'}</Label>
                             <Input
                                 id="amount"
                                 type="number"
@@ -173,27 +208,50 @@ export default function NewTransactionPage() {
                         )}
 
                         {formData.category === '部費' && (
-                            <div className="space-y-2">
-                                <Label htmlFor="targetDate">対象月</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        id="targetDate"
-                                        ref={targetDateInputRef}
-                                        type="month"
-                                        value={formData.targetDate}
-                                        onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() => targetDateInputRef.current?.showPicker()}
-                                    >
-                                        <Calendar className="h-4 w-4" />
-                                    </Button>
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="targetDate">開始月</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="targetDate"
+                                            ref={targetDateInputRef}
+                                            type="month"
+                                            value={formData.targetDate}
+                                            onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => targetDateInputRef.current?.showPicker()}
+                                        >
+                                            <Calendar className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">何月分から登録するかを選択してください</p>
                                 </div>
-                                <p className="text-xs text-muted-foreground">何月分の部費かを選択してください</p>
-                            </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="monthCount">月数</Label>
+                                    <Input
+                                        id="monthCount"
+                                        type="number"
+                                        required
+                                        min="1"
+                                        max="24"
+                                        value={formData.monthCount}
+                                        onChange={(e) => setFormData({ ...formData, monthCount: e.target.value })}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        {targetMonths.map(formatMonthLabel).join('、')}を登録します
+                                    </p>
+                                    {monthCount > 1 && (
+                                        <p className="text-xs text-primary">
+                                            合計: ¥{totalAmount.toLocaleString()}（¥{monthlyAmount.toLocaleString()} × {monthCount}か月）
+                                        </p>
+                                    )}
+                                </div>
+                            </>
                         )}
 
                         <div className="space-y-2">
