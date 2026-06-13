@@ -12,7 +12,7 @@ import Link from "next/link"
 
 export default function NewTransactionPage() {
     const router = useRouter()
-    const { addTransaction, members, transactions } = useApp()
+    const { addTransaction, members, transactions, settings } = useApp()
     const [loading, setLoading] = useState(false)
     const dateInputRef = useRef<HTMLInputElement>(null)
     const targetDateInputRef = useRef<HTMLInputElement>(null)
@@ -24,7 +24,6 @@ export default function NewTransactionPage() {
         description: '',
         memberId: '',
         targetDate: new Date().toISOString().slice(0, 7), // YYYY-MM
-        monthCount: '1',
         // Use local date for default
         date: (() => {
             const d = new Date();
@@ -41,9 +40,11 @@ export default function NewTransactionPage() {
         : ['コート代', '備品代', '大会参加費', 'その他経費'];
 
     const isClubFee = formData.type === 'income' && formData.category === '部費'
-    const monthCount = isClubFee ? Math.max(1, Number(formData.monthCount) || 1) : 1
-    const monthlyAmount = Number(formData.amount) || 0
-    const totalAmount = monthlyAmount * monthCount
+    const selectedMember = members.find(member => member.id === formData.memberId)
+    const receivedAmount = Number(formData.amount) || 0
+    const monthlyFee = isClubFee && selectedMember ? settings.monthlyFees[selectedMember.feeTier] : 0
+    const isExactClubFeeAmount = isClubFee && monthlyFee > 0 && receivedAmount > 0 && receivedAmount % monthlyFee === 0
+    const monthCount = isExactClubFeeAmount ? receivedAmount / monthlyFee : 0
 
     const addMonths = (yearMonth: string, monthsToAdd: number) => {
         const [year, month] = yearMonth.split('-').map(Number)
@@ -62,6 +63,21 @@ export default function NewTransactionPage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+
+        if (isClubFee && !selectedMember) {
+            alert('部費を登録するメンバーを選択してください。')
+            return
+        }
+
+        if (isClubFee && monthlyFee <= 0) {
+            alert('設定ページで部費の月額を設定してください。')
+            return
+        }
+
+        if (isClubFee && !isExactClubFeeAmount) {
+            alert(`受取金額が月額部費で割り切れません。月額 ¥${monthlyFee.toLocaleString()} に対して、受取金額は ¥${receivedAmount.toLocaleString()} です。`)
+            return
+        }
 
         const duplicateClubFee = isClubFee && formData.memberId && transactions.some(t => {
             const dateToCheck = t.targetDate || t.date
@@ -89,7 +105,7 @@ export default function NewTransactionPage() {
                     const monthLabel = formatMonthLabel(targetMonth)
 
                     addTransaction({
-                        amount: monthlyAmount,
+                        amount: monthlyFee,
                         type: 'income',
                         category: '部費',
                         description: formData.description ? `${formData.description} (${monthLabel})` : monthLabel,
@@ -191,7 +207,7 @@ export default function NewTransactionPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="amount">{isClubFee ? '月額 (¥)' : '金額 (¥)'}</Label>
+                            <Label htmlFor="amount">{isClubFee ? '受取金額 (¥)' : '金額 (¥)'}</Label>
                             <Input
                                 id="amount"
                                 type="number"
@@ -223,6 +239,18 @@ export default function NewTransactionPage() {
 
                         {formData.category === '部費' && (
                             <>
+                                {selectedMember && (
+                                    <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="text-muted-foreground">適用する月額</span>
+                                            <span className="font-bold text-primary">¥{monthlyFee.toLocaleString()}</span>
+                                        </div>
+                                        <div className="mt-1 text-xs text-muted-foreground">
+                                            {selectedMember.feeTier === 'under22' ? '22歳以下' : '23歳以上'}の部費設定を使用します
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="space-y-2">
                                     <Label htmlFor="targetDate">開始月</Label>
                                     <div className="flex gap-2">
@@ -245,26 +273,24 @@ export default function NewTransactionPage() {
                                     <p className="text-xs text-muted-foreground">何月分から登録するかを選択してください</p>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="monthCount">月数</Label>
-                                    <Input
-                                        id="monthCount"
-                                        type="number"
-                                        required
-                                        min="1"
-                                        max="24"
-                                        value={formData.monthCount}
-                                        onChange={(e) => setFormData({ ...formData, monthCount: e.target.value })}
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        {targetMonths.map(formatMonthLabel).join('、')}を登録します
-                                    </p>
-                                    {monthCount > 1 && (
-                                        <p className="text-xs text-primary">
-                                            合計: ¥{totalAmount.toLocaleString()}（¥{monthlyAmount.toLocaleString()} × {monthCount}か月）
-                                        </p>
-                                    )}
-                                </div>
+                                {selectedMember && receivedAmount > 0 && (
+                                    <div className="space-y-1 text-xs">
+                                        {isExactClubFeeAmount ? (
+                                            <>
+                                                <p className="text-muted-foreground">
+                                                    {targetMonths.map(formatMonthLabel).join('、')}を登録します
+                                                </p>
+                                                <p className="text-primary">
+                                                    判定: {monthCount}か月分（¥{monthlyFee.toLocaleString()} × {monthCount}か月）
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <p className="text-rose-500">
+                                                受取金額が月額 ¥{monthlyFee.toLocaleString()} で割り切れません
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </>
                         )}
 
