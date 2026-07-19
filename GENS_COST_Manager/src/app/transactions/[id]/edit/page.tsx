@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { useApp } from "@/context/AppContext"
 import { TransactionType } from "@/types"
 
-const incomeCategories = ['部費', '参加費', 'その他収入']
+const incomeCategories = ['部費', '参加費', 'コート代', 'その他収入']
 const expenseCategories = ['コート代', '備品代', '大会参加費', 'その他経費']
 
 export default function EditTransactionPage() {

@@ -36,7 +36,7 @@ export default function NewTransactionPage() {
 
     // Simple hardcoded categories for now
     const categories = formData.type === 'income'
-        ? ['部費', '参加費', 'その他収入']
+        ? ['部費', '参加費', 'コート代', 'その他収入']
         : ['コート代', '備品代', '大会参加費', 'その他経費'];
 
     const isClubFee = formData.type === 'income' && formData.category === '部費'
